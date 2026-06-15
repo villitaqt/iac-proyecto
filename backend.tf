@@ -4,7 +4,7 @@
 # (terraform output tfstate_bucket).
 terraform {
   backend "s3" {
-    bucket         = "vivevinyls-tfstate-REEMPLAZAR"
+    bucket         = "vivevinyls-tfstate-3a7fb8e9"
     key            = "prod/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "vivevinyls-tflock"
