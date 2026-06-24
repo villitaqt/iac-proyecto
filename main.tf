@@ -14,3 +14,11 @@ module "networking" {
   project     = var.project
   environment = var.environment
 }
+
+module "security" {
+  source      = "./modules/security"
+  project     = var.project
+  environment = var.environment
+  vpc_id      = module.networking.vpc_id
+  vpc_cidr    = module.networking.vpc_cidr
+}
