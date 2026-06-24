@@ -8,3 +8,9 @@ module "frontend" {
   project       = var.project
   bucket_suffix = random_id.suffix.hex
 }
+
+module "networking" {
+  source      = "./modules/networking"
+  project     = var.project
+  environment = var.environment
+}

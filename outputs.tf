@@ -12,3 +12,23 @@ output "frontend_distribution_id" {
   description = "ID de distribución de CloudFront, usado para invalidar caché"
   value       = module.frontend.distribution_id
 }
+
+output "vpc_id" {
+  description = "ID de la VPC"
+  value       = module.networking.vpc_id
+}
+
+output "public_subnet_ids" {
+  description = "IDs de las subnets públicas"
+  value       = module.networking.public_subnet_ids
+}
+
+output "private_app_subnet_ids" {
+  description = "IDs de las subnets privadas de aplicación"
+  value       = module.networking.private_app_subnet_ids
+}
+
+output "private_data_subnet_ids" {
+  description = "IDs de las subnets privadas de datos"
+  value       = module.networking.private_data_subnet_ids
+}
