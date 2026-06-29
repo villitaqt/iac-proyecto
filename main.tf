@@ -7,6 +7,7 @@ module "frontend" {
   source        = "./modules/frontend"
   project       = var.project
   bucket_suffix = random_id.suffix.hex
+  alb_dns_name  = module.compute.alb_dns_name
 }
 
 module "networking" {

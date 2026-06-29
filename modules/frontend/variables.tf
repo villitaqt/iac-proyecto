@@ -7,3 +7,8 @@ variable "bucket_suffix" {
   description = "Sufijo para que el nombre del bucket sea único globalmente"
   type        = string
 }
+
+variable "alb_dns_name" {
+  description = "DNS público del ALB, origin de CloudFront para /api/*"
+  type        = string
+}

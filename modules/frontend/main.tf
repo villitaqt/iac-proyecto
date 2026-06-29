@@ -54,6 +54,21 @@ resource "aws_cloudfront_distribution" "frontend" {
     origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
   }
 
+  # El ALB solo escucha HTTP (sin certificado propio): CloudFront
+  # sigue siendo quien termina TLS del lado del usuario, y el tramo
+  # CloudFront -> ALB va sobre HTTP en el puerto 80.
+  origin {
+    domain_name = var.alb_dns_name
+    origin_id   = "backend-alb-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -67,6 +82,28 @@ resource "aws_cloudfront_distribution" "frontend" {
         forward = "none"
       }
     }
+  }
+
+  # Todo lo que empiece con /api/ va al backend (ALB) en vez del
+  # bucket S3, cerrando el circuito frontend-backend detras del mismo
+  # dominio de CloudFront.
+  ordered_cache_behavior {
+    path_pattern     = "/api/*"
+    target_origin_id = "backend-alb-origin"
+
+    allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods  = ["GET", "HEAD"]
+
+    # CachingDisabled (managed): las respuestas de la API nunca se
+    # cachean, cada request llega siempre al backend.
+    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+
+    # AllViewerExceptHostHeader (managed): reenvia todos los headers
+    # del viewer, incluido Authorization, que CloudFront descarta por
+    # defecto y que el backend necesita para validar el JWT.
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+
+    viewer_protocol_policy = "redirect-to-https"
   }
 
   # Rutas de una SPA (React Router, etc.): si S3 responde 403/404 porque
