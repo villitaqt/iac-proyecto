@@ -66,7 +66,7 @@ data "aws_iam_policy_document" "kms" {
 
 resource "aws_security_group" "alb" {
   name        = "${var.project}-${var.environment}-alb-sg"
-  description = "SG del ALB: único punto que recibe tráfico de internet"
+  description = "SG del ALB: unico punto que recibe trafico de internet"
   vpc_id      = var.vpc_id
 
   tags = {
@@ -76,7 +76,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_security_group" "backend" {
   name        = "${var.project}-${var.environment}-backend-sg"
-  description = "SG del backend: solo acepta tráfico del ALB"
+  description = "SG del backend: solo acepta trafico del ALB"
   vpc_id      = var.vpc_id
 
   tags = {
@@ -86,7 +86,7 @@ resource "aws_security_group" "backend" {
 
 resource "aws_security_group" "rds" {
   name        = "${var.project}-${var.environment}-rds-sg"
-  description = "SG de RDS: solo acepta tráfico del backend"
+  description = "SG de RDS: solo acepta trafico del backend"
   vpc_id      = var.vpc_id
 
   tags = {
@@ -96,7 +96,7 @@ resource "aws_security_group" "rds" {
 
 resource "aws_security_group" "redis" {
   name        = "${var.project}-${var.environment}-redis-sg"
-  description = "SG de Redis: solo acepta tráfico del backend"
+  description = "SG de Redis: solo acepta trafico del backend"
   vpc_id      = var.vpc_id
 
   tags = {
@@ -131,7 +131,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http" {
 
 resource "aws_vpc_security_group_egress_rule" "alb_all" {
   security_group_id = aws_security_group.alb.id
-  description       = "El ALB necesita reenviar tráfico al backend en cualquier puerto"
+  description       = "El ALB necesita reenviar trafico al backend en cualquier puerto"
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }
@@ -141,7 +141,7 @@ resource "aws_vpc_security_group_egress_rule" "alb_all" {
 # Manager, todo vía NAT).
 resource "aws_vpc_security_group_ingress_rule" "backend_from_alb" {
   security_group_id            = aws_security_group.backend.id
-  description                  = "Tráfico de la app, solo desde el ALB"
+  description                  = "Trafico de la app, solo desde el ALB"
   referenced_security_group_id = aws_security_group.alb.id
   from_port                    = 8080
   to_port                      = 8080
@@ -168,7 +168,7 @@ resource "aws_vpc_security_group_egress_rule" "backend_to_redis" {
 
 resource "aws_vpc_security_group_egress_rule" "backend_https_out" {
   security_group_id = aws_security_group.backend.id
-  description       = "HTTPS saliente vía NAT: MercadoPago, ECR, Secrets Manager"
+  description       = "HTTPS saliente via NAT: MercadoPago, ECR, Secrets Manager"
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 443
   to_port           = 443
