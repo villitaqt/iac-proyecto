@@ -22,3 +22,8 @@ output "redis_port" {
   description = "Puerto de Redis"
   value       = aws_elasticache_replication_group.main.port
 }
+
+output "secret_redis_arn" {
+  description = "ARN del secreto con el auth_token de Redis"
+  value       = aws_secretsmanager_secret.redis.arn
+}
