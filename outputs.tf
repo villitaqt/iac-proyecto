@@ -97,3 +97,18 @@ output "redis_port" {
   description = "Puerto de Redis"
   value       = module.data.redis_port
 }
+
+output "ecr_repository_url" {
+  description = "URL del repositorio ECR para hacer push de la imagen del backend"
+  value       = module.compute.ecr_repository_url
+}
+
+output "task_execution_role_arn" {
+  description = "ARN del rol de ejecución de ECS"
+  value       = module.compute.task_execution_role_arn
+}
+
+output "task_role_arn" {
+  description = "ARN del rol de la tarea de ECS"
+  value       = module.compute.task_role_arn
+}

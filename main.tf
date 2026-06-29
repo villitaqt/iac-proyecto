@@ -33,3 +33,14 @@ module "data" {
   kms_key_arn             = module.security.kms_key_arn
   secret_db_arn           = module.security.secret_db_arn
 }
+
+module "compute" {
+  source                 = "./modules/compute"
+  project                = var.project
+  environment            = var.environment
+  kms_key_arn            = module.security.kms_key_arn
+  secret_db_arn          = module.security.secret_db_arn
+  secret_jwt_arn         = module.security.secret_jwt_arn
+  secret_redis_arn       = module.data.secret_redis_arn
+  secret_mercadopago_arn = module.security.secret_mercadopago_arn
+}
