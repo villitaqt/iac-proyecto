@@ -72,3 +72,28 @@ output "secret_mercadopago_arn" {
   description = "ARN del secreto con el access_token de MercadoPago"
   value       = module.security.secret_mercadopago_arn
 }
+
+output "rds_endpoint" {
+  description = "Endpoint (host:puerto) de la instancia RDS"
+  value       = module.data.rds_endpoint
+}
+
+output "rds_port" {
+  description = "Puerto de RDS"
+  value       = module.data.rds_port
+}
+
+output "rds_database_name" {
+  description = "Nombre de la base de datos inicial en RDS"
+  value       = module.data.rds_database_name
+}
+
+output "redis_primary_endpoint" {
+  description = "Endpoint del nodo primario de Redis"
+  value       = module.data.redis_primary_endpoint
+}
+
+output "redis_port" {
+  description = "Puerto de Redis"
+  value       = module.data.redis_port
+}

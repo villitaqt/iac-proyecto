@@ -22,3 +22,14 @@ module "security" {
   vpc_id      = module.networking.vpc_id
   vpc_cidr    = module.networking.vpc_cidr
 }
+
+module "data" {
+  source                  = "./modules/data"
+  project                 = var.project
+  environment             = var.environment
+  private_data_subnet_ids = module.networking.private_data_subnet_ids
+  sg_rds_id               = module.security.sg_rds_id
+  sg_redis_id             = module.security.sg_redis_id
+  kms_key_arn             = module.security.kms_key_arn
+  secret_db_arn           = module.security.secret_db_arn
+}
