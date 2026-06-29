@@ -43,4 +43,7 @@ module "compute" {
   secret_jwt_arn         = module.security.secret_jwt_arn
   secret_redis_arn       = module.data.secret_redis_arn
   secret_mercadopago_arn = module.security.secret_mercadopago_arn
+  vpc_id                 = module.networking.vpc_id
+  public_subnet_ids      = module.networking.public_subnet_ids
+  sg_alb_id              = module.security.sg_alb_id
 }

@@ -32,3 +32,18 @@ variable "secret_mercadopago_arn" {
   description = "ARN del secreto vivevinyls/mercadopago"
   type        = string
 }
+
+variable "vpc_id" {
+  description = "ID de la VPC (viene del modulo networking)"
+  type        = string
+}
+
+variable "public_subnet_ids" {
+  description = "IDs de las subnets publicas, una por AZ (viene del modulo networking)"
+  type        = list(string)
+}
+
+variable "sg_alb_id" {
+  description = "ID del security group del ALB (viene del modulo security)"
+  type        = string
+}

@@ -112,3 +112,23 @@ output "task_role_arn" {
   description = "ARN del rol de la tarea de ECS"
   value       = module.compute.task_role_arn
 }
+
+output "alb_dns_name" {
+  description = "DNS público del ALB"
+  value       = module.compute.alb_dns_name
+}
+
+output "alb_arn" {
+  description = "ARN del ALB"
+  value       = module.compute.alb_arn
+}
+
+output "alb_zone_id" {
+  description = "Zone ID del ALB, útil para un alias de Route53"
+  value       = module.compute.alb_zone_id
+}
+
+output "target_group_arn" {
+  description = "ARN del target group del backend"
+  value       = module.compute.target_group_arn
+}
