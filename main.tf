@@ -46,4 +46,9 @@ module "compute" {
   vpc_id                 = module.networking.vpc_id
   public_subnet_ids      = module.networking.public_subnet_ids
   sg_alb_id              = module.security.sg_alb_id
+  private_app_subnet_ids = module.networking.private_app_subnet_ids
+  sg_backend_id          = module.security.sg_backend_id
+  rds_endpoint           = module.data.rds_endpoint
+  redis_primary_endpoint = module.data.redis_primary_endpoint
+  cloudfront_domain_name = module.frontend.domain_name
 }

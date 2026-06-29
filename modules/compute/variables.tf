@@ -47,3 +47,28 @@ variable "sg_alb_id" {
   description = "ID del security group del ALB (viene del modulo security)"
   type        = string
 }
+
+variable "private_app_subnet_ids" {
+  description = "IDs de las subnets privadas de app, una por AZ (viene del modulo networking)"
+  type        = list(string)
+}
+
+variable "sg_backend_id" {
+  description = "ID del security group del backend (viene del modulo security)"
+  type        = string
+}
+
+variable "rds_endpoint" {
+  description = "Endpoint host:puerto de RDS (viene del modulo data)"
+  type        = string
+}
+
+variable "redis_primary_endpoint" {
+  description = "Endpoint del nodo primario de Redis (viene del modulo data)"
+  type        = string
+}
+
+variable "cloudfront_domain_name" {
+  description = "Dominio de CloudFront, usado para armar CORS_ALLOWED_ORIGINS"
+  type        = string
+}

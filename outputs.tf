@@ -132,3 +132,18 @@ output "target_group_arn" {
   description = "ARN del target group del backend"
   value       = module.compute.target_group_arn
 }
+
+output "ecs_cluster_name" {
+  description = "Nombre del cluster ECS"
+  value       = module.compute.ecs_cluster_name
+}
+
+output "ecs_service_name" {
+  description = "Nombre del servicio ECS del backend"
+  value       = module.compute.ecs_service_name
+}
+
+output "log_group_name" {
+  description = "Nombre del log group de CloudWatch del backend"
+  value       = module.compute.log_group_name
+}

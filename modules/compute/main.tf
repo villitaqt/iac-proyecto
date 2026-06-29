@@ -184,3 +184,188 @@ resource "aws_lb_listener" "http" {
     target_group_arn = aws_lb_target_group.backend.arn
   }
 }
+
+# --- ECS ---
+
+data "aws_region" "current" {}
+
+resource "aws_ecs_cluster" "main" {
+  name = "${var.project}-${var.environment}"
+
+  # Metricas a nivel de servicio/tarea en CloudWatch, utiles despues
+  # para armar dashboards en Grafana.
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "backend" {
+  name              = "/ecs/vivevinyls-backend"
+  retention_in_days = 14
+  kms_key_id        = var.kms_key_arn
+
+  tags = {
+    Name = "${var.project}-${var.environment}-backend-logs"
+  }
+}
+
+resource "aws_ecs_task_definition" "backend" {
+  family                   = "vivevinyls-backend"
+  requires_compatibilities = ["FARGATE"]
+  # awsvpc: obligatorio en Fargate, le da a cada tarea su propia ENI
+  # con IP privada dentro de la VPC.
+  network_mode = "awsvpc"
+  cpu          = "1024"
+  memory       = "2048"
+
+  execution_role_arn = aws_iam_role.task_execution.arn
+  task_role_arn      = aws_iam_role.task_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "backend"
+      image = "${aws_ecr_repository.backend.repository_url}:latest"
+
+      portMappings = [
+        {
+          containerPort = 8080
+          protocol      = "tcp"
+        }
+      ]
+
+      # Valores no sensibles: van planos como variables de entorno.
+      environment = [
+        {
+          name  = "POSTGRES_URL"
+          value = "jdbc:postgresql://${var.rds_endpoint}/vivevinyls"
+        },
+        {
+          name  = "REDIS_HOST"
+          value = var.redis_primary_endpoint
+        },
+        {
+          name  = "REDIS_PORT"
+          value = "6379"
+        },
+        {
+          name  = "REDIS_SSL_ENABLED"
+          value = "true"
+        },
+        {
+          name  = "CORS_ALLOWED_ORIGINS"
+          value = "https://${var.cloudfront_domain_name}"
+        },
+      ]
+
+      # Valores sensibles: ECS los inyecta directo desde Secrets
+      # Manager al arrancar la tarea, nunca quedan en el plan/state
+      # en texto plano ni en la definicion de la tarea.
+      secrets = [
+        {
+          name      = "POSTGRES_USER"
+          valueFrom = "${var.secret_db_arn}:username::"
+        },
+        {
+          name      = "POSTGRES_PASSWORD"
+          valueFrom = "${var.secret_db_arn}:password::"
+        },
+        {
+          name      = "JWT_SECRET"
+          valueFrom = "${var.secret_jwt_arn}:secret::"
+        },
+        {
+          name      = "REDIS_PASSWORD"
+          valueFrom = "${var.secret_redis_arn}:auth_token::"
+        },
+        {
+          name      = "MP_ACCESS_TOKEN"
+          valueFrom = "${var.secret_mercadopago_arn}:access_token::"
+        },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "backend"
+        }
+      }
+
+      # Requisito de ECS Exec: sin esto, "aws ecs execute-command" no
+      # puede abrir una sesion dentro del contenedor.
+      linuxParameters = {
+        initProcessEnabled = true
+      }
+    }
+  ])
+
+  tags = {
+    Name = "${var.project}-${var.environment}-backend-task"
+  }
+}
+
+resource "aws_ecs_service" "backend" {
+  name            = "backend"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.backend.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_app_subnet_ids
+    security_groups  = [var.sg_backend_id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend.arn
+    container_name   = "backend"
+    container_port   = 8080
+  }
+
+  enable_execute_command = true
+
+  # Si un deploy nuevo no levanta sano, ECS revierte solo al ultimo
+  # task definition que funcionaba, en vez de dejar el servicio caido.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  # El listener tiene que existir antes de registrar el servicio,
+  # para que el target group ya este colgado del ALB.
+  depends_on = [aws_lb_listener.http]
+
+  tags = {
+    Name = "${var.project}-${var.environment}-backend-service"
+  }
+}
+
+# --- Auto Scaling ---
+
+resource "aws_appautoscaling_target" "backend" {
+  min_capacity       = 2
+  max_capacity       = 20
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.backend.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# Target tracking: ECS ajusta el desired_count solo para mantener el
+# uso de CPU promedio del servicio cerca del 60%.
+resource "aws_appautoscaling_policy" "cpu" {
+  name               = "${var.project}-${var.environment}-backend-cpu"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.backend.resource_id
+  scalable_dimension = aws_appautoscaling_target.backend.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.backend.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value = 60
+  }
+}

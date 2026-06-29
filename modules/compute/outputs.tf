@@ -32,3 +32,18 @@ output "target_group_arn" {
   description = "ARN del target group del backend (aun sin targets registrados)"
   value       = aws_lb_target_group.backend.arn
 }
+
+output "ecs_cluster_name" {
+  description = "Nombre del cluster ECS"
+  value       = aws_ecs_cluster.main.name
+}
+
+output "ecs_service_name" {
+  description = "Nombre del servicio ECS del backend"
+  value       = aws_ecs_service.backend.name
+}
+
+output "log_group_name" {
+  description = "Nombre del log group de CloudWatch del backend"
+  value       = aws_cloudwatch_log_group.backend.name
+}
