@@ -1,0 +1,96 @@
+name: Infraestructura (Terraform)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+      - ".github/workflows/infra.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  TF_WORKING_DIR: .
+  AWS_REGION: us-east-1
+
+jobs:
+  checkov:
+    name: Análisis estático (Checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      # Escanea la raíz del repo en busca de configuraciones inseguras.
+      # soft_fail: true -> no bloquea el pipeline, solo deja constancia en el log y en el artifact.
+      - name: Ejecutar Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          soft_fail: true
+          output_format: cli,sarif
+          output_file_path: console,checkov-report
+
+      - name: Subir reporte de Checkov como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-report
+          path: checkov-report
+          if-no-files-found: ignore
+
+  terraform:
+    name: Terraform (fmt, validate, plan, apply)
+    needs: checkov
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      # Credenciales del usuario de CI/CD (vivevinyls-cicd), guardadas como secrets del repo.
+      # NOTA (mejora futura): este usuario usa AdministratorAccess por rapidez de entrega;
+      # reemplazar por una policy de permisos mínimos necesarios cuando haya tiempo.
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ">= 1.7.0"
+
+      # Verifica el formato del código sin modificarlo (falla si hay archivos mal formateados).
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform validate
+        run: terraform validate
+
+      # Genera el plan y lo guarda como artifact para poder revisarlo o auditarlo luego.
+      - name: Terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Subir plan como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ${{ env.TF_WORKING_DIR }}/tfplan
+
+      # El apply solo corre en push directo a main (no en pull requests), para evitar
+      # aplicar cambios de infraestructura a partir de código todavía no revisado/mergeado.
+      - name: Terraform apply
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
