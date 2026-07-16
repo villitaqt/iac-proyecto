@@ -21,7 +21,6 @@ module "security" {
   project     = var.project
   environment = var.environment
   vpc_id      = module.networking.vpc_id
-  vpc_cidr    = module.networking.vpc_cidr
 }
 
 module "data" {
@@ -50,6 +49,7 @@ module "compute" {
   private_app_subnet_ids = module.networking.private_app_subnet_ids
   sg_backend_id          = module.security.sg_backend_id
   rds_endpoint           = module.data.rds_endpoint
+  db_name                = module.data.rds_database_name
   redis_primary_endpoint = module.data.redis_primary_endpoint
   cloudfront_domain_name = module.frontend.domain_name
 }

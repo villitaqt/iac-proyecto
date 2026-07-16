@@ -12,8 +12,3 @@ variable "vpc_id" {
   description = "ID de la VPC (viene del módulo networking)"
   type        = string
 }
-
-variable "vpc_cidr" {
-  description = "CIDR de la VPC (viene del módulo networking)"
-  type        = string
-}

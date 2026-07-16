@@ -63,6 +63,11 @@ variable "rds_endpoint" {
   type        = string
 }
 
+variable "db_name" {
+  description = "Nombre de la base de datos en RDS (viene del modulo data)"
+  type        = string
+}
+
 variable "redis_primary_endpoint" {
   description = "Endpoint del nodo primario de Redis (viene del modulo data)"
   type        = string
