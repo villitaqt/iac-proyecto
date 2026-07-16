@@ -209,7 +209,7 @@ resource "random_password" "jwt" {
 }
 
 resource "aws_secretsmanager_secret" "db" {
-  name       = "vivevinyls/db"
+  name       = "${var.project}/db"
   kms_key_id = aws_kms_key.main.arn
 
   tags = {
@@ -226,7 +226,7 @@ resource "aws_secretsmanager_secret_version" "db" {
 }
 
 resource "aws_secretsmanager_secret" "jwt" {
-  name       = "vivevinyls/jwt"
+  name       = "${var.project}/jwt"
   kms_key_id = aws_kms_key.main.arn
 
   tags = {
@@ -245,7 +245,7 @@ resource "aws_secretsmanager_secret_version" "jwt" {
 # genera con Terraform, se deja un placeholder y se actualiza a mano
 # después del apply (ver comando aws al final).
 resource "aws_secretsmanager_secret" "mercadopago" {
-  name       = "vivevinyls/mercadopago"
+  name       = "${var.project}/mercadopago"
   kms_key_id = aws_kms_key.main.arn
 
   tags = {

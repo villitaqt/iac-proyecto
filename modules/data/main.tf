@@ -70,7 +70,7 @@ resource "random_password" "redis_auth" {
 }
 
 resource "aws_secretsmanager_secret" "redis" {
-  name       = "vivevinyls/redis"
+  name       = "${var.project}/redis"
   kms_key_id = var.kms_key_arn
 
   tags = {

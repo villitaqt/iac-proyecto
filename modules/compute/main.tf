@@ -1,7 +1,7 @@
 # --- ECR ---
 
 resource "aws_ecr_repository" "backend" {
-  name = "vivevinyls-backend"
+  name = "${var.project}-backend"
 
   # MUTABLE para poder re-pushear el tag :latest en cada deploy.
   image_tag_mutability = "MUTABLE"
@@ -201,7 +201,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "backend" {
-  name              = "/ecs/vivevinyls-backend"
+  name              = "/ecs/${var.project}-backend"
   retention_in_days = 14
   kms_key_id        = var.kms_key_arn
 
@@ -211,7 +211,7 @@ resource "aws_cloudwatch_log_group" "backend" {
 }
 
 resource "aws_ecs_task_definition" "backend" {
-  family                   = "vivevinyls-backend"
+  family                   = "${var.project}-backend"
   requires_compatibilities = ["FARGATE"]
   # awsvpc: obligatorio en Fargate, le da a cada tarea su propia ENI
   # con IP privada dentro de la VPC.
@@ -238,7 +238,7 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         {
           name  = "POSTGRES_URL"
-          value = "jdbc:postgresql://${var.rds_endpoint}/vivevinyls"
+          value = "jdbc:postgresql://${var.rds_endpoint}/${var.db_name}"
         },
         {
           name  = "REDIS_HOST"

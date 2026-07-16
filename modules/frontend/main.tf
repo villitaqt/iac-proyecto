@@ -1,7 +1,7 @@
 # Bucket S3 que aloja los archivos estáticos del build de Vite.
 # No es público: solo CloudFront puede leerlo, vía Origin Access Control.
 resource "aws_s3_bucket" "frontend" {
-  bucket = "vivevinyls-frontend-${var.bucket_suffix}"
+  bucket = "${var.project}-frontend-${var.bucket_suffix}"
 }
 
 resource "aws_s3_bucket_versioning" "frontend" {
